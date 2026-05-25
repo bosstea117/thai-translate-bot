@@ -40,7 +40,7 @@ app.post("/webhook", async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.log(error.response?.data || error.message);
+    console.log("LINE錯誤:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
