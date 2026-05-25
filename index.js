@@ -5,7 +5,8 @@ const app = express();
 
 app.use(express.json());
 
-const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
+const CHANNEL_ACCESS_TOKEN =
+  process.env.CHANNEL_ACCESS_TOKEN;
 
 // 偵測中文
 function isChinese(text) {
@@ -17,30 +18,28 @@ function isThai(text) {
   return /[\u0E00-\u0E7F]/.test(text);
 }
 
-// 翻譯 function
+// 免費 Google 翻譯
 async function translateText(text, from, to) {
-  try {
-    const response = await axios.post(
-      "https://translate.argosopentech.com/translate",
-      {
-        q: text,
-        source: from,
-        target: to,
-        format: "text"
-      },
-      {
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
-    );
 
-    return response.data.translatedText;
+  try {
+
+    const url =
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`;
+
+    const response = await axios.get(url);
+
+    return response.data[0]
+      .map(item => item[0])
+      .join("");
 
   } catch (error) {
+
     console.error("翻譯失敗:", error.message);
+
     return "翻譯失敗";
+
   }
+
 }
 
 app.post("/webhook", async (req, res) => {
@@ -50,6 +49,7 @@ app.post("/webhook", async (req, res) => {
     const event = req.body.events[0];
 
     if (
+      !event ||
       event.type !== "message" ||
       event.message.type !== "text"
     ) {
@@ -65,33 +65,36 @@ app.post("/webhook", async (req, res) => {
     // 中文 → 泰文
     if (isChinese(userMessage)) {
 
-      translatedText = await translateText(
-        userMessage,
-        "zh",
-        "th"
-      );
+      translatedText =
+        await translateText(
+          userMessage,
+          "zh-TW",
+          "th"
+        );
 
     }
 
     // 泰文 → 中文
     else if (isThai(userMessage)) {
 
-      translatedText = await translateText(
-        userMessage,
-        "th",
-        "zh"
-      );
+      translatedText =
+        await translateText(
+          userMessage,
+          "th",
+          "zh-TW"
+        );
 
     }
 
-    // 其他語言
+    // 其他
     else {
 
-      translatedText = "請輸入中文或泰文";
+      translatedText =
+        "請輸入中文或泰文";
 
     }
 
-    // 回覆 LINE
+    // LINE 回覆
     await axios.post(
       "https://api.line.me/v2/bot/message/reply",
       {
@@ -105,8 +108,10 @@ app.post("/webhook", async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${CHANNEL_ACCESS_TOKEN}`,
-          "Content-Type": "application/json"
+          Authorization:
+            `Bearer ${CHANNEL_ACCESS_TOKEN}`,
+          "Content-Type":
+            "application/json"
         }
       }
     );
@@ -118,7 +123,9 @@ app.post("/webhook", async (req, res) => {
   } catch (error) {
 
     console.error(
-      error.response?.data || error.message
+      "LINE錯誤:",
+      error.response?.data ||
+      error.message
     );
 
     res.sendStatus(500);
@@ -128,11 +135,18 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
+
   res.send("Thai Translate Bot 運作中");
+
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+  process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+  console.log(
+    `Server running on port ${PORT}`
+  );
+
 });
