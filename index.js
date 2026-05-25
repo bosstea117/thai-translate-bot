@@ -21,7 +21,7 @@ function isThai(text) {
 async function translateText(text, from, to) {
   try {
     const response = await axios.post(
-      "https://libretranslate.de/translate",
+      "https://translate.argosopentech.com/translate",
       {
         q: text,
         source: from,
