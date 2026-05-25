@@ -11,7 +11,6 @@ const config = {
 
 const client = new line.Client(config);
 
-// Webhook
 app.post("/webhook", line.middleware(config), async (req, res) => {
 
   try {
@@ -20,7 +19,6 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
     for (const event of events) {
 
-      // 只處理文字訊息
       if (
         event.type !== "message" ||
         event.message.type !== "text"
@@ -28,90 +26,56 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         continue;
       }
 
-      const userText = event.message.text;
+      const text = event.message.text;
 
-      console.log("收到訊息:", userText);
+      console.log("收到:", text);
 
-      let translatedText = "";
+      let result = "";
 
       // 中文 → 泰文
-      if (isChinese(userText)) {
+      if (/[\u4e00-\u9fa5]/.test(text)) {
 
-        translatedText = await translateText(
-          userText,
-          "zh-TW",
-          "th"
-        );
+        result = await googleTranslate(text, "zh-TW", "th");
 
       }
 
       // 泰文 → 中文
-      else if (isThai(userText)) {
+      else if (/[\u0E00-\u0E7F]/.test(text)) {
 
-        translatedText = await translateText(
-          userText,
-          "th",
-          "zh-TW"
-        );
+        result = await googleTranslate(text, "th", "zh-TW");
 
       }
 
-      // 其他語言
       else {
 
-        translatedText = "請輸入中文或泰文";
+        result = "請輸入中文或泰文";
 
       }
 
-      // 防止空白訊息
-      if (
-        !translatedText ||
-        translatedText.trim() === ""
-      ) {
-        continue;
+      if (!result || result.trim() === "") {
+        result = "翻譯失敗";
       }
 
-      // 回覆訊息
-      await client.replyMessage(
-        event.replyToken,
-        {
-          type: "text",
-          text: translatedText,
-        }
-      );
+      await client.replyMessage(event.replyToken, {
+        type: "text",
+        text: result,
+      });
 
-      console.log("成功回覆:", translatedText);
+      console.log("回覆:", result);
     }
 
     res.sendStatus(200);
 
   } catch (err) {
 
-    console.error(
-      "LINE錯誤:",
-      err.response?.data || err.message
-    );
+    console.log(err);
 
     res.sendStatus(500);
   }
 });
 
-// 判斷中文
-function isChinese(text) {
-
-  return /[\u4e00-\u9fa5]/.test(text);
-
-}
-
-// 判斷泰文
-function isThai(text) {
-
-  return /[\u0E00-\u0E7F]/.test(text);
-
-}
-
-// Google 免費翻譯
-async function translateText(text, from, to) {
+// Google翻譯
+async function googleTranslate(text, from, to) {
 
   try {
 
@@ -124,27 +88,18 @@ async function translateText(text, from, to) {
 
   } catch (error) {
 
-    console.error(
-      "翻譯失敗:",
-      error.response?.data || error.message
-    );
+    console.log(error);
 
     return "翻譯失敗";
   }
 }
 
-// 首頁
 app.get("/", (req, res) => {
-
-  res.send("Thai Translate Bot is running!");
-
+  res.send("Bot running");
 });
 
-// 啟動 server
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
-
-  console.log(`Server running on port ${PORT}`);
-
+  console.log("Server running on port " + PORT);
 });
