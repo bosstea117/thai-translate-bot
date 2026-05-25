@@ -8,17 +8,19 @@ app.use(express.json());
 const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
 
 app.post("/webhook", async (req, res) => {
-  const event = req.body.events[0];
-
-  if (!event || event.type !== "message") {
-    return res.sendStatus(200);
-  }
-
-  const userMessage = event.message.text;
-
-  console.log("收到訊息：", userMessage);
-
   try {
+    const event = req.body.events[0];
+
+    console.log("完整資料:", JSON.stringify(req.body));
+
+    if (!event) {
+      return res.sendStatus(200);
+    }
+
+    const userMessage = event.message.text;
+
+    console.log("收到訊息:", userMessage);
+
     await axios.post(
       "https://api.line.me/v2/bot/message/reply",
       {
@@ -38,6 +40,8 @@ app.post("/webhook", async (req, res) => {
       }
     );
 
+    console.log("成功回覆");
+
     res.sendStatus(200);
   } catch (error) {
     console.log("LINE錯誤:", error.response?.data || error.message);
@@ -46,7 +50,7 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Thai Translate Bot 運作中");
+  res.send("Bot running");
 });
 
 const PORT = process.env.PORT || 3000;
