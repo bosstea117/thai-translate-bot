@@ -10,13 +10,13 @@ const CHANNEL_ACCESS_TOKEN = process.env.CHANNEL_ACCESS_TOKEN;
 app.post("/webhook", async (req, res) => {
   const event = req.body.events[0];
 
-  if (event.type !== "message" || event.message.type !== "text") {
+  if (!event || event.type !== "message") {
     return res.sendStatus(200);
   }
 
   const userMessage = event.message.text;
 
-  console.log("收到訊息:", userMessage);
+  console.log("收到訊息：", userMessage);
 
   try {
     await axios.post(
@@ -40,7 +40,7 @@ app.post("/webhook", async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error(error.response?.data || error.message);
+    console.log(error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
