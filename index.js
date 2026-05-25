@@ -39,7 +39,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
         translatedText = await translateText(
           userText,
-          "zh",
+          "zh-TW",
           "th"
         );
 
@@ -51,7 +51,7 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         translatedText = await translateText(
           userText,
           "th",
-          "zh"
+          "zh-TW"
         );
 
       }
@@ -110,27 +110,17 @@ function isThai(text) {
 
 }
 
-// 翻譯功能
+// Google 免費翻譯
 async function translateText(text, from, to) {
 
   try {
 
-    const response = await axios.post(
-      "https://translate.argosopentech.com/translate",
-      {
-        q: text,
-        source: from,
-        target: to,
-        format: "text",
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const url =
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`;
 
-    return response.data.translatedText;
+    const response = await axios.get(url);
+
+    return response.data[0][0][0];
 
   } catch (error) {
 
