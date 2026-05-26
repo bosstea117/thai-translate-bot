@@ -65,8 +65,9 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
 async function translateText(text, from, to) {
   try {
+
     const response = await axios.post(
-      "https://translate.argosopentech.com/translate",
+      "https://libretranslate.com/translate",
       {
         q: text,
         source: from,
@@ -83,7 +84,9 @@ async function translateText(text, from, to) {
     return response.data.translatedText;
 
   } catch (error) {
+
     console.error("翻譯錯誤:", error.message);
+
     return "翻譯失敗";
   }
 }
@@ -95,5 +98,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running on port " + PORT);
 });
