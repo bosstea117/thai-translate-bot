@@ -12,13 +12,10 @@ const config = {
 const client = new line.Client(config);
 
 app.post("/webhook", line.middleware(config), async (req, res) => {
-
   try {
-
     const events = req.body.events;
 
     for (const event of events) {
-
       if (
         event.type !== "message" ||
         event.message.type !== "text"
@@ -28,28 +25,22 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       const text = event.message.text;
 
-      console.log("收到:", text);
+      console.log("收到訊息:", text);
 
       let result = "";
 
       // 中文 → 泰文
       if (/[\u4e00-\u9fa5]/.test(text)) {
-
-        result = await googleTranslate(text, "zh-TW", "th");
-
+        result = await translateText(text, "zh", "th");
       }
 
       // 泰文 → 中文
       else if (/[\u0E00-\u0E7F]/.test(text)) {
-
-        result = await googleTranslate(text, "th", "zh-TW");
-
+        result = await translateText(text, "th", "zh");
       }
 
       else {
-
         result = "請輸入中文或泰文";
-
       }
 
       if (!result || result.trim() === "") {
@@ -61,35 +52,38 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
         text: result,
       });
 
-      console.log("回覆:", result);
+      console.log("成功回覆:", result);
     }
 
     res.sendStatus(200);
 
   } catch (err) {
-
-    console.log(err);
-
+    console.error("LINE錯誤:", err);
     res.sendStatus(500);
   }
 });
 
-// Google翻譯
-async function googleTranslate(text, from, to) {
-
+async function translateText(text, from, to) {
   try {
+    const response = await axios.post(
+      "https://translate.argosopentech.com/translate",
+      {
+        q: text,
+        source: from,
+        target: to,
+        format: "text"
+      },
+      {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
 
-    const url =
-      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`;
-
-    const response = await axios.get(url);
-
-    return response.data[0][0][0];
+    return response.data.translatedText;
 
   } catch (error) {
-
-    console.log(error);
-
+    console.error("翻譯錯誤:", error.message);
     return "翻譯失敗";
   }
 }
@@ -101,5 +95,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
