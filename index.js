@@ -14,6 +14,7 @@ const client = new line.Client(config);
 // LINE Webhook
 app.post("/webhook", line.middleware(config), async (req, res) => {
   try {
+
     const events = req.body.events;
 
     for (const event of events) {
@@ -33,29 +34,47 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
 
       // 中文 → 泰文
       if (/[\u4e00-\u9fa5]/.test(text)) {
-        result = await googleTranslate(text, "zh-TW", "th");
+
+        result = await translateText(
+          text,
+          "zh",
+          "th"
+        );
+
       }
 
       // 泰文 → 中文
       else if (/[\u0E00-\u0E7F]/.test(text)) {
-        result = await googleTranslate(text, "th", "zh-TW");
+
+        result = await translateText(
+          text,
+          "th",
+          "zh"
+        );
+
       }
 
-      // 其他內容
+      // 非中泰文
       else {
+
         result = "請輸入中文或泰文";
+
       }
 
       if (!result || result.trim() === "") {
         result = "翻譯失敗";
       }
 
-      await client.replyMessage(event.replyToken, {
-        type: "text",
-        text: result,
-      });
+      await client.replyMessage(
+        event.replyToken,
+        {
+          type: "text",
+          text: result
+        }
+      );
 
       console.log("成功回覆:", result);
+
     }
 
     res.sendStatus(200);
@@ -65,33 +84,42 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
     console.log("LINE錯誤:", err);
 
     res.sendStatus(500);
+
   }
 });
 
-// Google 翻譯
-async function googleTranslate(text, from, to) {
+// LibreTranslate
+async function translateText(text, source, target) {
+
   try {
 
-    const url =
-      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`;
-
-    const response = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
+    const response = await axios.post(
+      "https://translate.terraprint.co/translate",
+      {
+        q: text,
+        source: source,
+        target: target,
+        format: "text"
+      },
+      {
+        headers: {
+          "Content-Type": "application/json"
+        }
       }
-    });
+    );
 
-    return response.data[0][0][0];
+    return response.data.translatedText;
 
   } catch (error) {
 
     console.log("翻譯錯誤:", error.message);
 
     return "翻譯失敗";
+
   }
 }
 
-// 首頁測試
+// 首頁
 app.get("/", (req, res) => {
   res.send("ThaiTranslateBot Running");
 });
