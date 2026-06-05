@@ -101,6 +101,18 @@ if (text === "申請授權") {
       enabled: true,
       createdAt: Date.now()
     });
+  await client.pushMessage(
+    "U0041633fe62e42700eda563015b6ae54",
+    {
+      type: "text",
+      text:
+        "🔔 新的授權申請\n\n" +
+        "群組ID：\n" +
+        event.source.groupId +
+        "\n\n核准請輸入：\n核准 " +
+        event.source.groupId
+  }
+);
 
   await client.replyMessage(event.replyToken, {
     type: "text",
