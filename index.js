@@ -56,7 +56,7 @@ if (text === "申請授權") {
     continue;
   }
 
-  await db.collection("authorizedGroups")
+  await db.collection("pendingGroups")
     .doc(event.source.groupId)
     .set({
       enabled: true,
@@ -65,7 +65,7 @@ if (text === "申請授權") {
 
   await client.replyMessage(event.replyToken, {
     type: "text",
-    text: "群組授權成功，可以開始使用翻譯功能"
+    text: "已送出授權申請，等待管理員審核"
   });
 
   continue;
