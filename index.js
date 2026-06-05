@@ -43,6 +43,45 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       console.log("收到訊息:", text);
 
       let translatedText = "";
+      // ===== 管理員核准群組 =====
+if (text.startsWith("核准 ")) {
+
+  const groupId = text.replace("核准 ", "").trim();
+
+  const adminDoc = await db
+    .collection("adminUsers")
+    .doc(event.source.userId)
+    .get();
+
+  if (!adminDoc.exists) {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "你不是管理員"
+    });
+
+    continue;
+  }
+
+  await db.collection("authorizedGroups")
+    .doc(groupId)
+    .set({
+      enabled: true,
+      createdAt: Date.now()
+    });
+
+  await db.collection("pendingGroups")
+    .doc(groupId)
+    .delete()
+    .catch(() => {});
+
+  await client.replyMessage(event.replyToken, {
+    type: "text",
+    text: `群組已核准：${groupId}`
+  });
+
+  continue;
+}
       // ===== 申請授權 =====
 if (text === "申請授權") {
 
