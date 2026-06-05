@@ -1,7 +1,17 @@
 const express = require("express");
 const line = require("@line/bot-sdk");
 const axios = require("axios");
+const admin = require("firebase-admin");
 
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  }),
+});
+
+const db = admin.firestore();
 const app = express();
 
 const config = {
@@ -33,6 +43,33 @@ app.post("/webhook", line.middleware(config), async (req, res) => {
       console.log("收到訊息:", text);
 
       let translatedText = "";
+      // ===== 申請授權 =====
+if (text === "申請授權") {
+
+  if (event.source.type !== "group") {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "請把機器人加入群組後，在群組內輸入『申請授權』"
+    });
+
+    continue;
+  }
+
+  await db.collection("authorizedGroups")
+    .doc(event.source.groupId)
+    .set({
+      enabled: true,
+      createdAt: Date.now()
+    });
+
+  await client.replyMessage(event.replyToken, {
+    type: "text",
+    text: "群組授權成功，可以開始使用翻譯功能"
+  });
+
+  continue;
+}
 
       // 中文 → 泰文
       if (/[\u4e00-\u9fff]/.test(text)) {
