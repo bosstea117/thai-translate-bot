@@ -70,7 +70,24 @@ if (text === "申請授權") {
 
   continue;
 }
+// ===== 群組授權檢查 =====
+if (event.source.type === "group") {
 
+  const groupDoc = await db
+    .collection("authorizedGroups")
+    .doc(event.source.groupId)
+    .get();
+
+  if (!groupDoc.exists) {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "此群組尚未授權，請輸入『申請授權』"
+    });
+
+    continue;
+  }
+}
       // 中文 → 泰文
       if (/[\u4e00-\u9fff]/.test(text)) {
         translatedText = await translateText(
