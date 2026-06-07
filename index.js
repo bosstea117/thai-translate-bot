@@ -140,11 +140,15 @@ if (text === "申請授權") {
 
     continue;
   }
-
+const groupSummary = await client.getGroupSummary(
+  event.source.groupId
+);
+  
   await db.collection("pendingGroups")
     .doc(event.source.groupId)
     .set({
       enabled: true,
+      groupName: groupSummary.groupName,
       createdAt: Date.now()
     });
   await client.pushMessage(
