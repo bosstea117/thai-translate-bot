@@ -63,10 +63,17 @@ if (text.startsWith("核准 ")) {
     continue;
   }
 
+  const pendingDoc = await db
+  .collection("pendingGroups")
+  .doc(groupId)
+  .get();
+
+const pendingData = pendingDoc.data();
   await db.collection("authorizedGroups")
     .doc(groupId)
     .set({
       enabled: true,
+      groupName: pendingData.groupName || "未命名",
       createdAt: Date.now()
     });
 
