@@ -82,6 +82,52 @@ if (text.startsWith("核准 ")) {
 
   continue;
 }
+// ===== 管理員停權群組 =====
+if (text.startsWith("停權")) {
+
+  const groupId = text.replace("停權", "").trim();
+
+  const adminDoc = await db
+    .collection("adminUsers")
+    .doc(event.source.userId)
+    .get();
+
+  if (!adminDoc.exists) {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "你不是管理員"
+    });
+
+    continue;
+  }
+
+  const groupDoc = await db
+    .collection("authorizedGroups")
+    .doc(groupId)
+    .get();
+
+  if (!groupDoc.exists) {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "找不到此授權群組"
+    });
+
+    continue;
+  }
+
+  await db.collection("authorizedGroups")
+    .doc(groupId)
+    .delete();
+
+  await client.replyMessage(event.replyToken, {
+    type: "text",
+    text: "✅ 已取消授權\n\n群組ID：\n" + groupId
+  });
+
+  continue;
+}
       // ===== 申請授權 =====
 if (text === "申請授權") {
 
