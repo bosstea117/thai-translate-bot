@@ -156,11 +156,13 @@ const groupSummary = await client.getGroupSummary(
     {
       type: "text",
       text:
-        "🔔 新的授權申請\n\n" +
-        "群組ID：\n" +
-        event.source.groupId +
-        "\n\n核准請輸入：\n核准 " +
-        event.source.groupId
+       "🔔 新的授權申請\n\n" +
+"群組名稱：\n" +
+groupSummary.groupName +
+"\n\n群組ID：\n" +
+event.source.groupId +
+"\n\n核准請輸入：\n核准 " +
+event.source.groupId
   }
 );
 
