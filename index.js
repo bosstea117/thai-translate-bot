@@ -174,15 +174,24 @@ event.source.groupId
   continue;
 }
  // ===== 禁止私聊 =====
+// ===== 禁止一般人私聊 =====
 if (event.source.type !== "group") {
 
-  await client.replyMessage(event.replyToken, {
-    type: "text",
-    text: "此機器人僅限已授權群組使用，請將機器人加入群組後輸入「申請授權」。"
-  });
+  const adminDoc = await db
+    .collection("adminUsers")
+    .doc(event.source.userId)
+    .get();
 
-  continue;
-}     
+  if (!adminDoc.exists) {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "此機器人僅限已授權群組使用，請將機器人加入群組後輸入「申請授權」。"
+    });
+
+    continue;
+  }
+}
 // ===== 群組授權檢查 =====
 if (event.source.type === "group") {
 
