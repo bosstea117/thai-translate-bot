@@ -128,6 +128,57 @@ if (text.startsWith("停權")) {
 
   continue;
 }
+// ===== 授權列表 =====
+if (text === "授權列表") {
+
+  const adminDoc = await db
+    .collection("adminUsers")
+    .doc(event.source.userId)
+    .get();
+
+  if (!adminDoc.exists) {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "你不是管理員"
+    });
+
+    continue;
+  }
+
+  const snapshot = await db
+    .collection("authorizedGroups")
+    .get();
+
+  if (snapshot.empty) {
+
+    await client.replyMessage(event.replyToken, {
+      type: "text",
+      text: "目前沒有已授權群組"
+    });
+
+    continue;
+  }
+
+  let result = "📋 已授權群組列表\n\n";
+
+  snapshot.forEach(doc => {
+
+    const data = doc.data();
+
+    result +=
+      `群組名稱：${data.groupName || "未命名"}\n` +
+      `群組ID：${doc.id}\n\n`;
+
+  });
+
+  await client.replyMessage(event.replyToken, {
+    type: "text",
+    text: result
+  });
+
+  continue;
+}
       // ===== 申請授權 =====
 if (text === "申請授權") {
 
