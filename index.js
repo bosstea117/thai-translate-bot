@@ -287,8 +287,8 @@ if (event.source.type === "group") {
       }
 
       else {
-        translatedText = "請輸入中文或泰文";
-      }
+    continue;
+}
 
       await client.replyMessage(event.replyToken, {
         type: "text",
